@@ -1,0 +1,7 @@
+{
+    "dependencies": ["./simple_text2cypher"],
+    "graphs": {
+      "simple_text2cypher": "./simple_text2cypher/agent.py:graph"
+    },
+    "env": ".env"
+}
