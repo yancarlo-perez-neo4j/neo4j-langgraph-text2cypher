@@ -45,7 +45,7 @@ mypy:
 ######################
 
 streamlit:
-	poetry run streamlit run simple_text2cypher/ui/streamlit_app.py $(file_path)
+	poetry run streamlit run neo4j_text2cypher/ui/streamlit_app.py $(file_path)
 
 ######################
 # LANGGRAPH STUDIO

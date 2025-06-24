@@ -1,4 +1,4 @@
-# Simple Text2Cypher
+# Neo4j Text2Cypher
 
 A simplified Text2Cypher agent for Neo4j using LangGraph. This project demonstrates how to build a robust natural language to Cypher query system with guardrails, validation, and a clean modular architecture.
 
@@ -34,7 +34,7 @@ Input → Guardrails → Planner → Text2Cypher → Gather Results → Summariz
 
 ```bash
 git clone <repository-url>
-cd simple-text2cypher
+cd neo4j-text2cypher
 make init  # or poetry install --with dev,ui
 ```
 
@@ -82,8 +82,8 @@ jupyter notebook examples/simple_text2cypher_example.ipynb
 
 #### Python Code
 ```python
-from simple_text2cypher.workflows.simple_text2cypher_workflow import create_simple_text2cypher_workflow
-from simple_text2cypher.retrievers.cypher_examples import YAMLCypherExampleRetriever
+from neo4j_text2cypher.workflows.neo4j_text2cypher_workflow import create_neo4j_text2cypher_workflow
+from neo4j_text2cypher.retrievers.cypher_examples import YAMLCypherExampleRetriever
 from langchain_neo4j import Neo4jGraph
 from langchain_openai import ChatOpenAI
 
@@ -93,7 +93,7 @@ llm = ChatOpenAI(model="gpt-4o", temperature=0)
 retriever = YAMLCypherExampleRetriever("data/example/queries.yml")
 
 # Create workflow
-agent = create_simple_text2cypher_workflow(
+agent = create_neo4j_text2cypher_workflow(
     llm=llm,
     graph=graph,
     cypher_example_retriever=retriever,
@@ -146,8 +146,8 @@ make langgraph      # Start LangGraph Studio
 ### Project Structure
 
 ```
-simple-text2cypher/
-├── simple_text2cypher/
+neo4j-text2cypher/
+├── neo4j_text2cypher/
 │   ├── components/          # LangGraph node components
 │   │   ├── guardrails/      # Input validation
 │   │   ├── planner/         # Question decomposition
@@ -166,16 +166,16 @@ simple-text2cypher/
 
 ### Adding New Components
 
-1. Create component in `simple_text2cypher/components/your_component/`
+1. Create component in `neo4j_text2cypher/components/your_component/`
 2. Implement `node.py` with your logic
-3. Add to workflow in `workflows/simple_text2cypher_workflow.py`
+3. Add to workflow in `workflows/neo4j_text2cypher_workflow.py`
 
 ### Custom Retrievers
 
 Implement `BaseCypherExampleRetriever` for custom example sources:
 
 ```python
-from simple_text2cypher.retrievers.cypher_examples.base import BaseCypherExampleRetriever
+from neo4j_text2cypher.retrievers.cypher_examples.base import BaseCypherExampleRetriever
 
 class MyRetriever(BaseCypherExampleRetriever):
     def get_examples(self, question: str, k: int = 5) -> List[Dict]:
@@ -189,7 +189,7 @@ Extend the validation components in `components/text2cypher/validation/` to add 
 
 ## Examples
 
-See `examples/simple_text2cypher_example.ipynb` for a complete walkthrough including:
+See `examples/neo4j_text2cypher_example.ipynb` for a complete walkthrough including:
 - Setup and initialization
 - Workflow creation and visualization
 - Example queries and results

@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock, patch
-from simple_text2cypher.workflows.simple_text2cypher_workflow import create_simple_text2cypher_workflow
-from simple_text2cypher.retrievers.cypher_examples.yaml import YAMLCypherExampleRetriever
+from neo4j_text2cypher.workflows.neo4j_text2cypher_workflow import create_neo4j_text2cypher_workflow
+from neo4j_text2cypher.retrievers.cypher_examples.yaml import YAMLCypherExampleRetriever
 
 
 def test_workflow_creation(mock_llm, mock_graph, tmp_path):
@@ -17,7 +17,7 @@ questions:
     retriever = YAMLCypherExampleRetriever(str(queries_file))
     
     # Create the workflow
-    workflow = create_simple_text2cypher_workflow(
+    workflow = create_neo4j_text2cypher_workflow(
         llm=mock_llm,
         graph=mock_graph,
         cypher_example_retriever=retriever,
@@ -50,7 +50,7 @@ questions:
     retriever = YAMLCypherExampleRetriever(str(queries_file))
     
     # Test with custom parameters
-    workflow = create_simple_text2cypher_workflow(
+    workflow = create_neo4j_text2cypher_workflow(
         llm=mock_llm,
         graph=mock_graph,
         cypher_example_retriever=retriever,

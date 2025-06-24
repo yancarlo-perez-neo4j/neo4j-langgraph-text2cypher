@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "simple-text2cypher"
+name = "neo4j-text2cypher"
 version = "0.1.0"
 description = "A simplified Text2Cypher agent for Neo4j using LangGraph"
 authors = ["Your Name <your.email@example.com>"]
@@ -52,7 +52,7 @@ target-version = "py310"
 show-fixes = true
 
 [tool.coverage.paths]
-source = ["simple_text2cypher"]
+source = ["neo4j_text2cypher"]
 
 [build-system]
 requires = ["poetry-core"]
