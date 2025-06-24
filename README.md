@@ -56,41 +56,52 @@ NEO4J_DATABASE="neo4j"
 OPENAI_API_KEY="sk-your_openai_key"
 ```
 
-### 3. Configure Your Examples
+### 3. Configure Your App
 
-Edit `data/example/queries.yml` with question-Cypher pairs relevant to your graph:
+Edit `example_apps/iqs_data_explorer/app-config.yml` with your application settings:
 
 ```yaml
-questions:
+streamlit_ui:
+  title: "Your App Name"
+  scope_description: "Description of what your app can answer"
+  example_questions:
+    - "How many customers do we have?"
+    - "What products are available?"
+
+neo4j:
+  database: "your_database_name"
+  # uri: "bolt://localhost:7687"  # Optional override
+
+example_queries:
   - question: "How many customers do we have?"
-    cypher: "MATCH (c:Customer) RETURN count(c) as customerCount"
+    cql: "MATCH (c:Customer) RETURN count(c) as customerCount"
   - question: "What products are available?"
-    cypher: "MATCH (p:Product) RETURN p.name as productName LIMIT 10"
+    cql: "MATCH (p:Product) RETURN p.name as productName LIMIT 10"
 ```
 
 ### 4. Run the Application
 
 #### Streamlit Web App
 ```bash
-make streamlit file_path=data/example/ui-config.json
+make streamlit file_path=example_apps/iqs_data_explorer/app-config.yml
 ```
 
 #### Jupyter Notebook
 ```bash
-jupyter notebook examples/simple_text2cypher_example.ipynb
+jupyter notebook example_apps/iqs_data_explorer/iqs_data_explorer_example.ipynb
 ```
 
 #### Python Code
 ```python
 from neo4j_text2cypher.workflows.neo4j_text2cypher_workflow import create_neo4j_text2cypher_workflow
-from neo4j_text2cypher.retrievers.cypher_examples import YAMLCypherExampleRetriever
+from neo4j_text2cypher.retrievers.cypher_examples import UnifiedConfigCypherExampleRetriever
 from langchain_neo4j import Neo4jGraph
 from langchain_openai import ChatOpenAI
 
 # Initialize components
 graph = Neo4jGraph(enhanced_schema=True)
 llm = ChatOpenAI(model="gpt-4o", temperature=0)
-retriever = YAMLCypherExampleRetriever("data/example/queries.yml")
+retriever = UnifiedConfigCypherExampleRetriever("example_apps/iqs_data_explorer/app-config.yml")
 
 # Create workflow
 agent = create_neo4j_text2cypher_workflow(

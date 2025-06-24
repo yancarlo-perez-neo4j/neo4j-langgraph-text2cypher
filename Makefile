@@ -64,6 +64,6 @@ help:
 	@echo 'format...................... - run code formatters'
 	@echo 'test........................ - run all tests'
 	@echo 'test_unit................... - run unit tests'
-	@echo 'streamlit................... - run streamlit app: make streamlit file_path=path/to/config.json'
+	@echo 'streamlit................... - run streamlit app: make streamlit file_path=example_apps/iqs_data_explorer/app-config.yml'
 	@echo 'langgraph................... - start LangGraph Studio development server'
 	@echo 'mypy........................ - run type checking'

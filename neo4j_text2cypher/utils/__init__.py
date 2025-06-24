@@ -1,3 +1,3 @@
-from .config import load_config
+from .config import UnifiedAppConfigLoader, UnifiedAppConfig
 
-__all__ = ["load_config"]
+__all__ = ["UnifiedAppConfigLoader", "UnifiedAppConfig"]

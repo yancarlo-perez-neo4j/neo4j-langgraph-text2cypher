@@ -27,20 +27,26 @@ class YAMLCypherExampleRetriever(BaseCypherExampleRetriever):
     def _get_example_queries_from_yaml(self) -> List[Dict[str, str]]:
         """
         Format the queries to be used in text2cypher.
+        Expects unified format with 'example_queries' key and 'cql' field.
         """
 
         with open(self.cypher_query_yaml_file_path) as f:
             try:
-                queries = yaml.safe_load(f)["queries"]
+                yaml_data = yaml.safe_load(f)
+                queries = yaml_data.get("example_queries", [])
             except yaml.YAMLError as exc:
                 print(exc)
-        return [
-            {
-                "question": q["question"],
-                "cql": self._format_cypher_for_example(q["cql"]),
-            }
-            for q in queries
-        ]
+                queries = []
+        
+        formatted_queries = []
+        for q in queries:
+            if "cql" in q and "question" in q:
+                formatted_queries.append({
+                    "question": q["question"],
+                    "cql": self._format_cypher_for_example(q["cql"]),
+                })
+        
+        return formatted_queries
 
     def _format_cypher_for_example(self, cypher: str) -> str:
         """

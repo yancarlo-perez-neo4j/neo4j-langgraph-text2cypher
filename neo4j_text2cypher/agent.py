@@ -4,25 +4,35 @@ import os
 from langchain_neo4j import Neo4jGraph
 from langchain_openai import ChatOpenAI
 
-from neo4j_text2cypher.retrievers.cypher_examples import YAMLCypherExampleRetriever
+from neo4j_text2cypher.retrievers.cypher_examples import UnifiedConfigCypherExampleRetriever
+from neo4j_text2cypher.utils.config import UnifiedAppConfigLoader
 from neo4j_text2cypher.workflows.neo4j_text2cypher_workflow import create_neo4j_text2cypher_workflow
 
-# Initialize components
-neo4j_graph = Neo4jGraph(enhanced_schema=True)
+# Use unified configuration
+config_path = "example_apps/iqs_data_explorer/app-config.yml"
+config_loader = UnifiedAppConfigLoader(config_path)
+
+# Initialize Neo4j connection with app-specific settings
+neo4j_params = config_loader.get_neo4j_connection_params()
+neo4j_graph = Neo4jGraph(**neo4j_params)
+
+# Initialize LLM
 llm = ChatOpenAI(model="gpt-4o", temperature=0)
 
-# Use example queries file
-cypher_query_yaml_file_path = "data/example/queries.yml"
-cypher_example_retriever = YAMLCypherExampleRetriever(
-    cypher_query_yaml_file_path=cypher_query_yaml_file_path
+# Use unified config retriever
+cypher_example_retriever = UnifiedConfigCypherExampleRetriever(
+    config_path=config_path
 )
+
+# Get scope description from config
+streamlit_config = config_loader.get_streamlit_config()
 
 # Create the graph to be found by LangGraph Studio
 graph = create_neo4j_text2cypher_workflow(
     llm=llm,
     graph=neo4j_graph,
     cypher_example_retriever=cypher_example_retriever,
-    scope_description="This application answers questions about your Neo4j graph database.",
+    scope_description=streamlit_config.scope_description,
     llm_cypher_validation=False,
     attempt_cypher_execution_on_final_attempt=True,
 )

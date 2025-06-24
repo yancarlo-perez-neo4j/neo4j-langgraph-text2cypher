@@ -1,9 +1,7 @@
 import asyncio
-import json
-import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import List
 
 # Add the project root to Python path
 project_root = Path(__file__).parent.parent.parent
@@ -14,8 +12,9 @@ from dotenv import load_dotenv
 from langchain_neo4j import Neo4jGraph
 from langchain_openai import ChatOpenAI
 
-from neo4j_text2cypher.retrievers.cypher_examples import YAMLCypherExampleRetriever
+from neo4j_text2cypher.retrievers.cypher_examples import UnifiedConfigCypherExampleRetriever
 from neo4j_text2cypher.ui.components import chat, display_chat_history, sidebar
+from neo4j_text2cypher.utils.config import UnifiedAppConfigLoader
 from neo4j_text2cypher.workflows.neo4j_text2cypher_workflow import create_neo4j_text2cypher_workflow
 
 if load_dotenv():
@@ -24,47 +23,46 @@ else:
     print("Unable to Load Environment.")
 
 
-def get_args() -> Dict[str, Any]:
-    """Parse the command line arguments to configure the application."""
+def get_config_loader() -> UnifiedAppConfigLoader:
+    """Parse the command line arguments and return config loader."""
 
     args = sys.argv
     if len(args) > 1:
         config_path: str = args[1]
-        assert config_path.lower().endswith(
-            ".json"
-        ), f"provided file is not JSON | {config_path}"
-        with open(config_path, "r") as f:
-            config: Dict[str, Any] = json.load(f)
+        
+        # Only support YAML configs
+        if config_path.lower().endswith((".yml", ".yaml")):
+            return UnifiedAppConfigLoader(config_path)
+        else:
+            raise ValueError(f"Only YAML config files (.yml/.yaml) are supported: {config_path}")
     else:
-        config = dict()
-
-    return config
+        raise ValueError("Config file path is required. Usage: streamlit run app.py <config.yml>")
 
 
-def initialize_state(
-    cypher_query_yaml_file_path: str,
-    scope_description: str,
-    example_questions: List[str] = list(),
-) -> None:
-    """
-    Initialize the application state.
-    """
+def initialize_state(config_loader: UnifiedAppConfigLoader) -> None:
+    """Initialize the application state."""
 
     if "agent" not in st.session_state:
-        # Initialize graph and LLM
-        graph = Neo4jGraph(enhanced_schema=True)
+        # Initialize Neo4j connection with app-specific settings
+        neo4j_params = config_loader.get_neo4j_connection_params()
+        graph = Neo4jGraph(**neo4j_params)
+        
+        # Initialize LLM
         llm = ChatOpenAI(model="gpt-4o", temperature=0)
-
-        # Initialize cypher example retriever
-        cypher_example_retriever = YAMLCypherExampleRetriever(
-            cypher_query_yaml_file_path=cypher_query_yaml_file_path
+        
+        # Use unified config retriever
+        cypher_example_retriever = UnifiedConfigCypherExampleRetriever(
+            config_path=str(config_loader.config_path)
         )
+        
+        # Get config for UI
+        streamlit_config = config_loader.get_streamlit_config()
 
         # Create the workflow
         agent = create_neo4j_text2cypher_workflow(
             llm=llm,
             graph=graph,
-            scope_description=scope_description,
+            scope_description=streamlit_config.scope_description,
             cypher_example_retriever=cypher_example_retriever,
             llm_cypher_validation=False,
             attempt_cypher_execution_on_final_attempt=True,
@@ -72,7 +70,7 @@ def initialize_state(
 
         st.session_state.agent = agent
         st.session_state.messages = []
-        st.session_state.example_questions = example_questions
+        st.session_state.example_questions = streamlit_config.example_questions
 
 
 async def run_app(title: str = "Simple Text2Cypher Assistant", scope_description: str = "") -> None:
@@ -99,26 +97,14 @@ def main() -> None:
     Main function to run the Streamlit application.
     """
 
-    config = get_args()
+    config_loader = get_config_loader()
+    streamlit_config = config_loader.get_streamlit_config()
 
-    title = config.get("title", "Simple Text2Cypher Assistant")
-    scope_description = config.get(
-        "scope_description", "This application answers questions using a Neo4j graph database."
-    )
-    cypher_query_yaml_file_path = config.get(
-        "cypher_query_yaml_file_path", "data/example/queries.yml"
-    )
-    example_questions = config.get("example_questions", [])
+    st.set_page_config(page_title=streamlit_config.title, page_icon="🤖", layout="wide")
 
-    st.set_page_config(page_title=title, page_icon="🤖", layout="wide")
+    initialize_state(config_loader)
 
-    initialize_state(
-        cypher_query_yaml_file_path=cypher_query_yaml_file_path,
-        scope_description=scope_description,
-        example_questions=example_questions,
-    )
-
-    asyncio.run(run_app(title=title, scope_description=scope_description))
+    asyncio.run(run_app(title=streamlit_config.title, scope_description=streamlit_config.scope_description))
 
 
 if __name__ == "__main__":

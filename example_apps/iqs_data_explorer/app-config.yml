@@ -1,4 +1,23 @@
-queries:
+neo4j:
+  database: "honda"
+  # uri: "bolt://localhost:7687"  # Optional: override default from .env
+  # enhanced_schema: true
+
+streamlit_ui:
+  title: "IQS Data Explorer"
+  scope_description: "This application may answer questions related to customer feedback on Honda vehicles."
+  example_questions:
+    - "How many vehicles are there?"
+    - "Summarize the responses under fcd10 for honda pilot. What is the men to women proportion for these responses and what is the problem for fcd10?"
+    - "What are the top 5 most severe problems for women aged 30-34 for all Acura models?"
+    - "Please summarize the verbatims for 2023 RDX for question 010 Trunk/TG Touch-Free Sensor DTU and create categories for the problems. As an output, I want the summary, corresponding categories and their verbatims"
+    - "What are the top 5 problems about seats for each age buckets for men over the age of 53?"
+    - "What are the top 5 problems about seats for each age buckets over the age of 53? Summarize the responses for each bucket"
+    - "What is the customer with the most reported problems? Can you list the problems, summarize them and include the problem id's as well as the customer gender and age range."
+    - "Summarize and compare the sentiment for responses related to noise and sound in Honda Accord and Honda Pilot for women and return the number of responses considered."
+    - "What color is the sky?"
+
+example_queries:
   - question: What is the proportion of male to female complainants about cup holders in the Honda Odyssey?
     cql: |-
       MATCH (v:Verbatim {make: "Honda", model: "Odyssey"})
