@@ -6,6 +6,7 @@ from uuid import uuid4
 import pandas as pd
 import streamlit as st
 from neo4j.exceptions import SessionExpired
+from langgraph.errors import GraphRecursionError
 
 from neo4j_text2cypher.components.state import OutputState
 
@@ -24,18 +25,30 @@ async def append_llm_response(question: str) -> None:
         agent = st.session_state.get("agent")
 
         if agent is not None:
-            response: OutputState = await agent.ainvoke(
-                {"question": question, "data": [], "history": []},
-                config={"recursion_limit": 50}
+            try:
+                response: OutputState = await agent.ainvoke(
+                    {"question": question, "data": [], "history": []},
+                    config={"recursion_limit": 30}
+                )
+
+                message_placeholder.markdown(response.get("answer", ""))
+                show_cypher_response_information(response=response)
+
+                st.session_state.get("messages", []).append(
+                    {"role": "assistant", "content": response}
+                )
+            except GraphRecursionError:
+                error_msg = "Query exceeded processing limits. Please try a simpler question or break it into smaller parts."
+                message_placeholder.error(error_msg)
+                st.session_state.get("messages", []).append(
+                    {"role": "assistant", "content": {"answer": error_msg}}
+                )
+        else:
+            error_msg = "Agent not available. Please refresh the page."
+            message_placeholder.error(error_msg)
+            st.session_state.get("messages", []).append(
+                {"role": "assistant", "content": {"answer": error_msg}}
             )
-
-            message_placeholder.markdown(response.get("answer", ""))
-
-            show_cypher_response_information(response=response)
-
-    st.session_state.get("messages", []).append(
-        {"role": "assistant", "content": response}
-    )
 
 
 def show_cypher_response_information(response: OutputState) -> None:

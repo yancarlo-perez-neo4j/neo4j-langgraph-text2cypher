@@ -12,7 +12,7 @@ from .prompts import create_validate_final_answer_prompt_template
 
 
 def create_validate_final_answer_node(
-    llm: BaseChatModel, graph: Neo4jGraph, loop_back_node: str = "text2cypher"
+    llm: BaseChatModel, graph: Neo4jGraph, loop_back_node: str = "text2cypher", max_validation_attempts: int = 2
 ) -> Callable[[OverallState], Coroutine[Any, Any, dict[str, Any]]]:
     """
     Create a Validate Final Answer node for a LangGraph workflow.
@@ -25,6 +25,8 @@ def create_validate_final_answer_node(
         The Neo4j graph wrapper.
     loop_back_node : str, optional
             The name of the node or subgraph to return to with follow up questions, by default "text2cypher"
+    max_validation_attempts : int, optional
+            Maximum number of validation attempts before accepting the answer, by default 2
 
     Returns
     -------
@@ -54,6 +56,9 @@ def create_validate_final_answer_node(
             Updates to the state.
         """
 
+        # Track validation attempts to prevent infinite loops
+        validation_attempts = state.get("validation_attempts", 0) + 1
+        
         response: ValidateFinalAnswerResponse = (
             await validate_final_answer_chain.ainvoke(
                 {
@@ -67,10 +72,20 @@ def create_validate_final_answer_node(
             )
         )
 
-        to_return: Dict[str, Any] = {"steps": ["validate_final_answer"]}
+        to_return: Dict[str, Any] = {
+            "steps": ["validate_final_answer"],
+            "validation_attempts": validation_attempts
+        }
 
-        if response.valid:
+        # Accept answer if valid OR if we've reached max attempts
+        if response.valid or validation_attempts >= max_validation_attempts:
             to_return.update({"next_action": "final_answer"})
+            if validation_attempts >= max_validation_attempts and not response.valid:
+                # Add note that validation was skipped due to attempt limit
+                current_summary = state.get("summary", "")
+                to_return.update({
+                    "summary": current_summary + f"\n\n*Note: Answer provided after {max_validation_attempts} validation attempts.*"
+                })
         else:
             to_return.update(
                 {
@@ -78,7 +93,7 @@ def create_validate_final_answer_node(
                     "subquestions": [
                         Task(
                             question=response.follow_up_question or "",
-                            parent_task="follow up question",
+                            parent_task=f"follow up question (attempt {validation_attempts})",
                         )
                     ],
                 }
