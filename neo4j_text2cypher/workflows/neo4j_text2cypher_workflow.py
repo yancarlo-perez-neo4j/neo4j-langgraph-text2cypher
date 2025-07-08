@@ -6,7 +6,6 @@ from langgraph.constants import END, START
 from langgraph.graph.state import CompiledStateGraph, StateGraph
 
 from neo4j_text2cypher.components.final_answer import create_final_answer_node
-from neo4j_text2cypher.components.gather_cypher import create_gather_cypher_node
 from neo4j_text2cypher.components.guardrails import create_guardrails_node
 from neo4j_text2cypher.components.planner import create_planner_node
 from neo4j_text2cypher.components.state import (
@@ -77,7 +76,6 @@ def create_neo4j_text2cypher_workflow(
         max_attempts=max_attempts,
         attempt_cypher_execution_on_final_attempt=attempt_cypher_execution_on_final_attempt,
     )
-    gather_cypher = create_gather_cypher_node()
     summarize = create_summarization_node(llm=llm)
     final_answer = create_final_answer_node()
     
@@ -92,7 +90,6 @@ def create_neo4j_text2cypher_workflow(
     main_graph_builder.add_node(guardrails)
     main_graph_builder.add_node(planner)
     main_graph_builder.add_node("text2cypher", text2cypher)
-    main_graph_builder.add_node(gather_cypher)
     main_graph_builder.add_node(summarize)
     main_graph_builder.add_node(final_answer)
     
@@ -110,8 +107,7 @@ def create_neo4j_text2cypher_workflow(
         query_mapper_edge,  # type: ignore[arg-type, unused-ignore]
         ["text2cypher"],
     )
-    main_graph_builder.add_edge("text2cypher", "gather_cypher")
-    main_graph_builder.add_edge("gather_cypher", "summarize")
+    main_graph_builder.add_edge("text2cypher", "summarize")
     
     # Conditionally add validation edges
     if enable_final_answer_validation:

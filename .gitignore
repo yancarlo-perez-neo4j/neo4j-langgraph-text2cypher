@@ -177,8 +177,4 @@ Desktop.ini
 # Streamlit
 .streamlit/
 
-# Neo4j
-neo4j_data/
-
-# Claude Code project instructions
-CLAUDE.md
+LANGGRAPH_GUIDE.md
