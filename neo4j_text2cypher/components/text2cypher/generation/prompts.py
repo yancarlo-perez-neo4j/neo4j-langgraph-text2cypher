@@ -21,6 +21,7 @@ def create_text2cypher_generation_prompt_template() -> ChatPromptTemplate:
                 (
                     "Given an input question, convert it to a Cypher query. No pre-amble."
                     "Do not wrap the response in any backticks or anything else. Respond with a Cypher statement only!"
+                    "Always include a LIMIT clause to prevent excessive results unless the question specifically asks for all results."
                 ),
             ),
             (
@@ -28,6 +29,8 @@ def create_text2cypher_generation_prompt_template() -> ChatPromptTemplate:
                 (
                     """You are a Neo4j expert. Given an input question, create a syntactically correct Cypher query to run.
 Do not wrap the response in any backticks or anything else. Begin with MATCH or WITH clauses only. Respond with a Cypher statement only!
+
+IMPORTANT: Always end your query with LIMIT 100 unless the question specifically asks for all results or a different number.
 
 Here is the schema information
 {schema}

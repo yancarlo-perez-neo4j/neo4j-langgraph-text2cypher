@@ -64,8 +64,8 @@ def initialize_state(config_loader: UnifiedAppConfigLoader) -> None:
             graph=graph,
             scope_description=streamlit_config.scope_description,
             cypher_example_retriever=cypher_example_retriever,
-            llm_cypher_validation=False,
-            attempt_cypher_execution_on_final_attempt=True,
+            llm_cypher_validation=True,
+            attempt_cypher_execution_on_final_attempt=False,
         )
 
         st.session_state.agent = agent

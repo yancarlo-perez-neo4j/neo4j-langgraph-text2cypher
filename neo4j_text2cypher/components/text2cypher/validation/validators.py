@@ -121,16 +121,20 @@ async def validate_cypher_query_with_llm(
         errors.extend(llm_output.errors)
     if llm_output.filters:
         for filter in llm_output.filters:
-            # Do mapping only for string values
-            if (
-                not [
-                    prop
-                    for prop in graph.structured_schema["node_props"][filter.node_label]
-                    if prop["property"] == filter.property_key
-                ][0]["type"]
-                == "STRING"
-            ):
+            # Check if filter.node_label exists in node_props (it might be a relationship type)
+            if filter.node_label not in graph.structured_schema["node_props"]:
                 continue
+            
+            # Do mapping only for string values
+            matching_props = [
+                prop
+                for prop in graph.structured_schema["node_props"][filter.node_label]
+                if prop["property"] == filter.property_key
+            ]
+            
+            if not matching_props or matching_props[0]["type"] != "STRING":
+                continue
+                
             mapping = graph.query(
                 f"MATCH (n:{filter.node_label}) WHERE toLower(n.`{filter.property_key}`) = toLower($value) RETURN 'yes' LIMIT 1",
                 {"value": filter.property_value},
