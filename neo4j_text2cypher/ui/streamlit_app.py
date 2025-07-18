@@ -12,9 +12,9 @@ from dotenv import load_dotenv
 from langchain_neo4j import Neo4jGraph
 from langchain_openai import ChatOpenAI
 
-from neo4j_text2cypher.retrievers.cypher_examples import UnifiedConfigCypherExampleRetriever
+from neo4j_text2cypher.retrievers.cypher_examples import ConfigCypherExampleRetriever
 from neo4j_text2cypher.ui.components import chat, display_chat_history, sidebar
-from neo4j_text2cypher.utils.config import UnifiedAppConfigLoader
+from neo4j_text2cypher.utils.config import ConfigLoader
 from neo4j_text2cypher.utils.debug import setup_debug_logging
 from neo4j_text2cypher.workflows.neo4j_text2cypher_workflow import create_neo4j_text2cypher_workflow
 
@@ -24,7 +24,7 @@ else:
     print("Unable to Load Environment.")
 
 
-def get_config_loader() -> UnifiedAppConfigLoader:
+def get_config_loader() -> ConfigLoader:
     """Parse the command line arguments and return config loader."""
 
     args = sys.argv
@@ -33,14 +33,14 @@ def get_config_loader() -> UnifiedAppConfigLoader:
         
         # Only support YAML configs
         if config_path.lower().endswith((".yml", ".yaml")):
-            return UnifiedAppConfigLoader(config_path)
+            return ConfigLoader(config_path)
         else:
             raise ValueError(f"Only YAML config files (.yml/.yaml) are supported: {config_path}")
     else:
         raise ValueError("Config file path is required. Usage: streamlit run app.py <config.yml>")
 
 
-def initialize_state(config_loader: UnifiedAppConfigLoader) -> None:
+def initialize_state(config_loader: ConfigLoader) -> None:
     """Initialize the application state."""
 
     if "agent" not in st.session_state:
@@ -56,7 +56,7 @@ def initialize_state(config_loader: UnifiedAppConfigLoader) -> None:
         llm = ChatOpenAI(model="gpt-4o", temperature=0)
         
         # Use unified config retriever
-        cypher_example_retriever = UnifiedConfigCypherExampleRetriever(
+        cypher_example_retriever = ConfigCypherExampleRetriever(
             config_path=str(config_loader.config_path)
         )
         

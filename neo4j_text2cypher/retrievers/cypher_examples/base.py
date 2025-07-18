@@ -23,3 +23,11 @@ class BaseCypherExampleRetriever(BaseModel, ABC):
             A list of examples as a string.
         """
         pass
+
+    def _format_cypher_for_example(self, cypher: str) -> str:
+        """
+        Formats Cypher for use in LangChain's Example Templates.
+        This involves replacing '{' with '{{' and '}' with '}}'.
+        """
+        cypher = cypher.replace("{", "{{")
+        return cypher.replace("}", "}}")

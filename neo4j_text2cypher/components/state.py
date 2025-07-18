@@ -1,7 +1,6 @@
 from operator import add
 from typing import Annotated, Any, Dict, List, Optional
 
-from langchain_core.messages import ToolCall
 from typing_extensions import TypedDict
 
 from neo4j_text2cypher.components.models import Task
@@ -87,32 +86,3 @@ class TaskState(TypedDict):
     data: CypherOutputState
 
 
-class PredefinedCypherInputState(TypedDict):
-    """The input state for a predefined Cypher node."""
-
-    task: str
-    query_name: str
-    query_parameters: Dict[str, Any]
-    prev_steps: List[Any]
-
-
-class ToolSelectionInputState(TypedDict):
-    """The input state for the Tool Selection node."""
-
-    question: str
-    parent_task: str
-    context: Any
-
-
-class ToolSelectionOutputState(TypedDict):
-    tool_selection_task: str
-    tool_call: Optional[ToolCall]
-    prev_steps: Optional[List[Any]]
-
-
-class ToolSelectionErrorState(TypedDict):
-    """The input state to the tool selection error handling node."""
-
-    task: str
-    errors: List[str]
-    cypher_steps: List[Any]

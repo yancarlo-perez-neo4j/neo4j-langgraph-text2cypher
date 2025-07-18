@@ -4,7 +4,7 @@ from typing import List, Literal
 
 from langgraph.types import Send
 
-from neo4j_text2cypher.components.state import OverallState, ToolSelectionOutputState
+from neo4j_text2cypher.components.state import OverallState
 from neo4j_text2cypher.components.text2cypher.state import CypherOutputState
 from neo4j_text2cypher.utils.debug import get_routing_logger
 
@@ -74,37 +74,5 @@ def query_mapper_edge(state: OverallState) -> List[Send]:
     return sends
 
 
-def map_reduce_planner_to_tool_selection(state: OverallState) -> List[Send]:
-    """Map each identified task in the planner stage to a tool_selection node."""
-
-    return [
-        Send(
-            "tool_selection",
-            {
-                "question": task.question,
-                "parent_task": task.parent_task,
-            },
-        )
-        for task in state.get("tasks", list())
-    ]
-
-
-def tool_selection_output_router(state: ToolSelectionOutputState) -> Send:
-    print("in router")
-    match state.get("next_action", ""):
-        case "text2cypher":
-            return Send("text2cypher", {"task": state.get("task", "")})
-        case "predefined_cypher":
-            return Send(
-                "predefined_cypher",
-                {
-                    "task": state.get("task", ""),
-                    "tool_call": state.get("tool_call", dict()),
-                },
-            )
-        case "error":
-            return Send("final_answer", dict())
-        case _:
-            return Send("final_answer", dict())
 
 

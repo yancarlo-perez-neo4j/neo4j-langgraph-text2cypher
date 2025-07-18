@@ -4,14 +4,14 @@ import os
 from langchain_neo4j import Neo4jGraph
 from langchain_openai import ChatOpenAI
 
-from neo4j_text2cypher.retrievers.cypher_examples import UnifiedConfigCypherExampleRetriever
-from neo4j_text2cypher.utils.config import UnifiedAppConfigLoader
+from neo4j_text2cypher.retrievers.cypher_examples import ConfigCypherExampleRetriever
+from neo4j_text2cypher.utils.config import ConfigLoader
 from neo4j_text2cypher.utils.debug import setup_debug_logging
 from neo4j_text2cypher.workflows.neo4j_text2cypher_workflow import create_neo4j_text2cypher_workflow
 
 # Use unified configuration
 config_path = "example_apps/iqs_data_explorer/app-config.yml"
-config_loader = UnifiedAppConfigLoader(config_path)
+config_loader = ConfigLoader(config_path)
 
 # Setup debug logging from config
 debug_config = config_loader.get_debug_config()
@@ -25,7 +25,7 @@ neo4j_graph = Neo4jGraph(**neo4j_params)
 llm = ChatOpenAI(model="gpt-4o", temperature=0)
 
 # Use unified config retriever
-cypher_example_retriever = UnifiedConfigCypherExampleRetriever(
+cypher_example_retriever = ConfigCypherExampleRetriever(
     config_path=config_path
 )
 

@@ -48,7 +48,7 @@ class UnifiedAppConfig(BaseModel):
     debug: DebugConfig = Field(default_factory=DebugConfig, description="Debug logging settings")
 
 
-class UnifiedAppConfigLoader:
+class ConfigLoader:
     """Loads and merges configuration from YAML file and environment variables."""
     
     def __init__(self, config_path: Union[str, Path]):
