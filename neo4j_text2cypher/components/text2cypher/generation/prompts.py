@@ -32,12 +32,18 @@ Do not wrap the response in any backticks or anything else. Begin with MATCH or 
 
 IMPORTANT: Always end your query with LIMIT 100 unless the question specifically asks for all results or a different number.
 
+IMPORTANT: If the current question contains references like "those", "them", "it", "that", or similar pronouns, 
+use the conversation history to understand what these references mean. Look at previous questions and answers 
+to determine the context and generate the appropriate Cypher query.
+
 Here is the schema information
 {schema}
 
 Below are a number of examples of questions and their corresponding Cypher queries.
 
 {fewshot_examples}
+
+{conversation_history}
 
 User input: {question}
 Cypher query:"""

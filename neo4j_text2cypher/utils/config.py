@@ -31,12 +31,21 @@ class ExampleQuery(BaseModel):
     cql: str = Field(description="Corresponding Cypher query")
 
 
+class DebugConfig(BaseModel):
+    """Debug logging configuration."""
+    
+    validation: bool = Field(default=False, description="Enable validation debug logging")
+    routing: bool = Field(default=False, description="Enable routing debug logging")
+    planner: bool = Field(default=False, description="Enable planner debug logging")
+
+
 class UnifiedAppConfig(BaseModel):
     """Unified application configuration combining all settings."""
     
     streamlit_ui: StreamlitUIConfig = Field(description="Streamlit UI settings")
     neo4j: Neo4jConfig = Field(description="Neo4j connection settings")
     example_queries: List[ExampleQuery] = Field(default=[], description="Example question-cypher pairs")
+    debug: DebugConfig = Field(default_factory=DebugConfig, description="Debug logging settings")
 
 
 class UnifiedAppConfigLoader:
@@ -61,9 +70,13 @@ class UnifiedAppConfigLoader:
         streamlit_config = self._raw_config.get('streamlit_ui', {})
         neo4j_config = self._raw_config.get('neo4j', {})
         example_queries = self._raw_config.get('example_queries', [])
+        debug_config = self._raw_config.get('debug', {})
         
         # Merge Neo4j config with environment variables
         merged_neo4j_config = self._merge_neo4j_config(neo4j_config)
+        
+        # Merge debug config with environment variables
+        merged_debug_config = self._merge_debug_config(debug_config)
         
         # Parse example queries (handle both new and legacy formats)
         parsed_queries = self._parse_example_queries(example_queries)
@@ -72,7 +85,8 @@ class UnifiedAppConfigLoader:
         self._unified_config = UnifiedAppConfig(
             streamlit_ui=StreamlitUIConfig(**streamlit_config),
             neo4j=Neo4jConfig(**merged_neo4j_config),
-            example_queries=parsed_queries
+            example_queries=parsed_queries,
+            debug=DebugConfig(**merged_debug_config)
         )
         
         return self._unified_config
@@ -90,6 +104,21 @@ class UnifiedAppConfigLoader:
         merged_config.update(yaml_config)
         
         return merged_config
+    
+    def _merge_debug_config(self, yaml_config: Dict[str, Any]) -> Dict[str, Any]:
+        """Merge YAML debug config with environment variables."""
+        # Environment variables override YAML config
+        merged_config = {
+            'validation': self._str_to_bool(os.getenv('DEBUG_VALIDATION', str(yaml_config.get('validation', False)))),
+            'routing': self._str_to_bool(os.getenv('DEBUG_ROUTING', str(yaml_config.get('routing', False)))),
+            'planner': self._str_to_bool(os.getenv('DEBUG_PLANNER', str(yaml_config.get('planner', False))))
+        }
+        
+        return merged_config
+    
+    def _str_to_bool(self, value: str) -> bool:
+        """Convert string to boolean."""
+        return str(value).lower() in ('true', '1', 'yes', 'on')
     
     def _parse_example_queries(self, queries_data: List[Dict[str, Any]]) -> List[ExampleQuery]:
         """Parse example queries from unified format."""
@@ -125,4 +154,8 @@ class UnifiedAppConfigLoader:
     def get_example_queries(self) -> List[ExampleQuery]:
         """Get parsed example queries."""
         return self.load_config().example_queries
+    
+    def get_debug_config(self) -> DebugConfig:
+        """Get debug configuration."""
+        return self.load_config().debug
     

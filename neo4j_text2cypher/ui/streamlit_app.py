@@ -15,6 +15,7 @@ from langchain_openai import ChatOpenAI
 from neo4j_text2cypher.retrievers.cypher_examples import UnifiedConfigCypherExampleRetriever
 from neo4j_text2cypher.ui.components import chat, display_chat_history, sidebar
 from neo4j_text2cypher.utils.config import UnifiedAppConfigLoader
+from neo4j_text2cypher.utils.debug import setup_debug_logging
 from neo4j_text2cypher.workflows.neo4j_text2cypher_workflow import create_neo4j_text2cypher_workflow
 
 if load_dotenv():
@@ -43,6 +44,10 @@ def initialize_state(config_loader: UnifiedAppConfigLoader) -> None:
     """Initialize the application state."""
 
     if "agent" not in st.session_state:
+        # Setup debug logging from config
+        debug_config = config_loader.get_debug_config()
+        setup_debug_logging(debug_config)
+        
         # Initialize Neo4j connection with app-specific settings
         neo4j_params = config_loader.get_neo4j_connection_params()
         graph = Neo4jGraph(**neo4j_params)

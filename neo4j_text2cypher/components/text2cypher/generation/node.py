@@ -2,7 +2,7 @@
 This code is based on content found in the LangGraph documentation: https://python.langchain.com/docs/tutorials/graph/#advanced-implementation-with-langgraph
 """
 
-from typing import Any, Callable, Coroutine, Dict
+from typing import Any, Callable, Coroutine, Dict, List
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.output_parsers import StrOutputParser
@@ -15,6 +15,37 @@ from neo4j_text2cypher.retrievers.cypher_examples.base import BaseCypherExampleR
 from neo4j_text2cypher.components.text2cypher.state import CypherInputState
 
 generation_prompt = create_text2cypher_generation_prompt_template()
+
+
+def format_conversation_history_for_cypher(history: List[Dict[str, Any]]) -> str:
+    """
+    Format conversation history for the text2cypher generation prompt.
+    
+    Parameters
+    ----------
+    history : List[Dict[str, Any]]
+        The conversation history.
+        
+    Returns
+    -------
+    str
+        Formatted conversation history string.
+    """
+    if not history:
+        return "No previous conversation history."
+    
+    formatted_history = "Previous conversation history:\n"
+    for i, record in enumerate(history, 1):
+        formatted_history += f"\n{i}. Q: {record['question']}\n"
+        formatted_history += f"   A: {record['answer']}\n"
+        
+        # Include cypher queries for additional context
+        if record.get('cyphers'):
+            formatted_history += f"   Cypher queries used:\n"
+            for cypher in record['cyphers']:
+                formatted_history += f"   - {cypher['statement']}\n"
+    
+    return formatted_history
 
 
 def create_text2cypher_generation_node(
@@ -33,12 +64,17 @@ def create_text2cypher_generation_node(
             **{"query": state.get("task", ""), "k": 8}
         )
 
+        # Format conversation history for the prompt
+        # Note: The planner already resolves context references, so detailed history is not needed here
+        conversation_history = "No previous conversation history."
+
         # print("\n\nExamples: ", examples, "\n\n")
         generated_cypher = await text2cypher_chain.ainvoke(
             {
                 "question": state.get("task", ""),
                 "fewshot_examples": examples,
                 "schema": graph.schema,
+                "conversation_history": conversation_history,
             }
         )
         # print("GENERATED CYPHER: ", generated_cypher, "\n\n")

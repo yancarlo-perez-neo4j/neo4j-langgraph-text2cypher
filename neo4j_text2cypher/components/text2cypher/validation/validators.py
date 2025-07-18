@@ -12,6 +12,7 @@ from neo4j.exceptions import CypherSyntaxError
 from neo4j_text2cypher.components.text2cypher.validation.models import ValidateCypherOutput
 from neo4j_text2cypher.constants import WRITE_CLAUSES
 from neo4j_text2cypher.components.utils.utils import retrieve_and_parse_schema_from_graph_for_prompts
+from neo4j_text2cypher.utils.debug import get_validation_logger
 from .models import (
     CypherValidationTask,
     Neo4jStructuredSchema,
@@ -110,38 +111,40 @@ async def validate_cypher_query_with_llm(
     errors: List[str] = []
     mapping_errors: List[str] = []
 
+    logger = get_validation_logger()
+    logger.debug(f"🔍 LLM VALIDATION DEBUG - Question: {question}")
+    logger.debug(f"🔍 LLM VALIDATION DEBUG - Cypher: {cypher_statement}")
+    
+    schema_for_validation = retrieve_and_parse_schema_from_graph_for_prompts(graph)
+    logger.debug(f"🔍 LLM VALIDATION DEBUG - Schema being used for validation:")
+    logger.debug(f"🔍 LLM VALIDATION DEBUG - Schema length: {len(schema_for_validation)} characters")
+    logger.debug(f"🔍 LLM VALIDATION DEBUG - Schema content:\n{schema_for_validation}")
+
     llm_output: ValidateCypherOutput = await validate_cypher_chain.ainvoke(
         {
             "question": question,
-            "schema": retrieve_and_parse_schema_from_graph_for_prompts(graph),
+            "schema": schema_for_validation,
             "cypher": cypher_statement,
         }
     )
+    
+    logger.debug(f"🔍 LLM VALIDATION DEBUG - LLM found errors: {llm_output.errors}")
+    logger.debug(f"🔍 LLM VALIDATION DEBUG - LLM filters: {llm_output.filters}")
+    
     if llm_output.errors:
         errors.extend(llm_output.errors)
-    if llm_output.filters:
-        for filter in llm_output.filters:
-            # Check if filter.node_label exists in node_props (it might be a relationship type)
-            if filter.node_label not in graph.structured_schema["node_props"]:
-                continue
-            
-            # Do mapping only for string values
-            matching_props = [
-                prop
-                for prop in graph.structured_schema["node_props"][filter.node_label]
-                if prop["property"] == filter.property_key
-            ]
-            
-            if not matching_props or matching_props[0]["type"] != "STRING":
-                continue
-                
-            mapping = graph.query(
-                f"MATCH (n:{filter.node_label}) WHERE toLower(n.`{filter.property_key}`) = toLower($value) RETURN 'yes' LIMIT 1",
-                {"value": filter.property_value},
-            )
-            if not mapping:
-                mapping_error = f"Missing value mapping for {filter.node_label} on property {filter.property_key} with value {filter.property_value}"
-                mapping_errors.append(mapping_error)
+    # Instead of checking individual property mappings, test the whole query with EXPLAIN
+    # This catches real syntax/schema issues without false negatives for valid queries
+    try:
+        logger.debug(f"🔍 LLM VALIDATION DEBUG - Testing query validity with EXPLAIN")
+        graph.query(f"EXPLAIN {cypher_statement}")
+        logger.debug(f"🔍 LLM VALIDATION DEBUG - Query is valid - no mapping errors")
+    except Exception as e:
+        mapping_error = f"Query validation failed: {str(e)}"
+        logger.debug(f"🔍 LLM VALIDATION DEBUG - Query validation failed: {mapping_error}")
+        mapping_errors.append(mapping_error)
+    
+    logger.debug(f"🔍 LLM VALIDATION DEBUG - Final result - errors: {errors}, mapping_errors: {mapping_errors}")
     return {"errors": errors, "mapping_errors": mapping_errors}
 
 

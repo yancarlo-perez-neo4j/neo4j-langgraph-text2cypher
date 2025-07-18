@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, List, Dict, Any
 
 from langchain_core.language_models import BaseChatModel
 from langchain_neo4j import Neo4jGraph

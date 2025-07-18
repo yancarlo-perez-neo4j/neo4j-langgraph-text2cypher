@@ -19,6 +19,7 @@ from neo4j_text2cypher.components.text2cypher.validation.validators import (
     validate_cypher_query_with_schema,
     validate_no_writes_in_cypher_query,
 )
+from neo4j_text2cypher.utils.debug import get_validation_logger
 
 validation_prompt_template = create_text2cypher_validation_prompt_template()
 
@@ -68,6 +69,13 @@ def create_text2cypher_validation_node(
         GENERATION_ATTEMPT: int = state.get("attempts", 0) + 1
         errors = []
         mapping_errors = []
+
+        # Debug logging
+        logger = get_validation_logger()
+        logger.debug(f"🔍 VALIDATION DEBUG - Starting validation for task: {state.get('task', 'unknown')}")
+        logger.debug(f"🔍 VALIDATION DEBUG - Statement: {state.get('statement', 'no statement')}")
+        logger.debug(f"🔍 VALIDATION DEBUG - Attempt: {GENERATION_ATTEMPT}")
+        logger.debug(f"🔍 VALIDATION DEBUG - Max attempts: {max_attempts}")
 
         # print("syntax error check")
         # Check for syntax errors

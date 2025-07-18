@@ -2,6 +2,11 @@ neo4j: # Optional: override default from .env
   database: "honda"
   # uri: "bolt://localhost:7687"
 
+debug: # Optional: enable debug logging for components
+  validation: false
+  routing: false  
+  planner: false
+
 streamlit_ui:
   title: "IQS Data Explorer"
   scope_description: "This application may answer questions related to customer feedback on Honda vehicles."

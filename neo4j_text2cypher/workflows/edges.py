@@ -6,6 +6,7 @@ from langgraph.types import Send
 
 from neo4j_text2cypher.components.state import OverallState, ToolSelectionOutputState
 from neo4j_text2cypher.components.text2cypher.state import CypherOutputState
+from neo4j_text2cypher.utils.debug import get_routing_logger
 
 
 def guardrails_conditional_edge(
@@ -52,10 +53,25 @@ def validate_final_answer_router(
 def query_mapper_edge(state: OverallState) -> List[Send]:
     """Map each task question to a Text2Cypher subgraph."""
 
-    return [
+    # Debug: Log routing decision
+    logger = get_routing_logger()
+    tasks = state.get("tasks", list())
+    next_action = state.get("next_action", "unknown")
+    logger.debug(f"🔍 ROUTING DEBUG - Next action: {next_action}")
+    logger.debug(f"🔍 ROUTING DEBUG - Tasks: {len(tasks)}")
+    for i, task in enumerate(tasks):
+        logger.debug(f"🔍 ROUTING DEBUG - Task {i+1}: {task.question}")
+    
+    sends = [
         Send("text2cypher", {"task": task.question})
-        for task in state.get("tasks", list())
+        for task in tasks
     ]
+    
+    logger.debug(f"🔍 ROUTING DEBUG - Sending {len(sends)} messages to text2cypher")
+    for i, send in enumerate(sends):
+        logger.debug(f"🔍 ROUTING DEBUG - Send {i+1}: {send.node} with task: {send.arg.get('task', 'unknown')}")
+    
+    return sends
 
 
 def map_reduce_planner_to_tool_selection(state: OverallState) -> List[Send]:

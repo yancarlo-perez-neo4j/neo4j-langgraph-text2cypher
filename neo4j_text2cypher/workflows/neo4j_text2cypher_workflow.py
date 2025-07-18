@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from langchain_core.language_models import BaseChatModel
 from langchain_neo4j import Neo4jGraph
