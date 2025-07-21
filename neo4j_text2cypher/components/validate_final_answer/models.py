@@ -1,9 +1,10 @@
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ValidateFinalAnswerResponse(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     valid: bool = Field(
         description="Whether the final answer sufficiently answers the provided question."
     )

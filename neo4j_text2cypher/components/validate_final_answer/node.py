@@ -36,7 +36,7 @@ def create_validate_final_answer_node(
 
     validate_final_answer_chain: Runnable[Dict[str, Any], Any] = (
         create_validate_final_answer_prompt_template()
-        | llm.with_structured_output(ValidateFinalAnswerResponse)
+        | llm.with_structured_output(ValidateFinalAnswerResponse, method="function_calling")
     )
 
     async def validate_final_answer(state: OverallState) -> Dict[str, Any]:

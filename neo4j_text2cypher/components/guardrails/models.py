@@ -4,10 +4,11 @@ This code is based on content found in the LangGraph documentation: https://pyth
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class GuardrailsOutput(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     decision: Literal["end", "planner"] = Field(
         description="Decision on whether the question is related to the graph contents."
     )

@@ -8,19 +8,18 @@ readme = "README.md"
 package-mode = false
 
 [tool.poetry.dependencies]
-langchain = "^0.3.3"
-langchain-core = "^0.3.0"
-langchain-openai = "^0.2.0"
-langgraph = "^0.2.6"
+langchain = "^0.3.26"
+langchain-core = "^0.3.25"
+langchain-openai = "^0.3.28"
+langgraph = "^0.3.0"
 pandas = "^2.2.2"
-pydantic = "^2.6.1"
+pydantic = "^2.9.2"
 python = "^3.10"
 pyyaml = "^6.0.1"
 typing-extensions = "^4.0.0"
-neo4j-graphrag = "^1.4.0"
-neo4j = "^5.27.0"
-langchain-neo4j = "0.3.0"
-langsmith = "^0.3.11"
+neo4j-graphrag = "^1.6.0"
+neo4j = "^5.28.0"
+langchain-neo4j = "^0.4.0"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.4.3"
@@ -33,7 +32,6 @@ ruff = "^0.3.0"
 types-PyYAML = "^6.0.12.20240724"
 ipykernel = "^6.29.5"
 nest-asyncio = "^1.6.0"
-langgraph-cli = {extras = ["inmem"], version = "^0.1.70"}
 pytest-asyncio = "^0.25.3"
 
 [tool.poetry.group.ui.dependencies]

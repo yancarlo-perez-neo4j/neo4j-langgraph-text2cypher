@@ -41,7 +41,7 @@ def create_guardrails_node(
     )
 
     guardrails_chain: Runnable[Dict[str, Any], Any] = (
-        guardrails_prompt | llm.with_structured_output(GuardrailsOutput)
+        guardrails_prompt | llm.with_structured_output(GuardrailsOutput, method="function_calling")
     )
 
     async def guardrails(state: InputState) -> Dict[str, Any]:

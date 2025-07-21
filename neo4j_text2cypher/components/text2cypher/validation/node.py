@@ -58,7 +58,7 @@ def create_text2cypher_validation_node(
 
     if llm is not None and llm_validation:
         validate_cypher_chain = validation_prompt_template | llm.with_structured_output(
-            ValidateCypherOutput
+            ValidateCypherOutput, method="function_calling"
         )
 
     async def validate_cypher(state: CypherState) -> Dict[str, Any]:

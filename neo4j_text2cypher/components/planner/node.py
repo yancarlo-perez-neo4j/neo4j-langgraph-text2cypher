@@ -57,7 +57,7 @@ def create_planner_node(
     """
 
     planner_chain: Runnable[Dict[str, Any], Any] = (
-        planner_prompt | llm.with_structured_output(PlannerOutput)
+        planner_prompt | llm.with_structured_output(PlannerOutput, method="function_calling")
     )
 
     async def planner(state: InputState) -> Dict[str, Any]:
