@@ -78,7 +78,6 @@ def create_text2cypher_validation_node(
         logger.debug(f"🔍 VALIDATION DEBUG - Attempt: {GENERATION_ATTEMPT}")
         logger.debug(f"🔍 VALIDATION DEBUG - Max attempts: {max_attempts}")
 
-        # print("syntax error check")
         # Check for syntax errors
         syntax_error = validate_cypher_query_syntax(
             graph=graph, cypher_statement=state.get("statement", "")
@@ -86,12 +85,10 @@ def create_text2cypher_validation_node(
 
         errors.extend(syntax_error)
 
-        # print("write clause check")
         # check for write clauses
         write_errors = validate_no_writes_in_cypher_query(state.get("statement", ""))
         errors.extend(write_errors)
 
-        # print("correct cypher check")
         # Experimental feature for correcting relationship directions
         corrected_cypher = correct_cypher_query_relationship_direction(
             graph=graph, cypher_statement=state.get("statement", "")
