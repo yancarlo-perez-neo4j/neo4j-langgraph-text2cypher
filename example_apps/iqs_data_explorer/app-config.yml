@@ -1,6 +1,12 @@
-neo4j: # Optional: override default from .env
+
+# Neo4j connection settings (environment variables take precedence, then config values, then defaults)
+# Supports: NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, NEO4J_DATABASE environment variables
+neo4j:
+  uri: "bolt://localhost:7687"
+  username: "neo4j"
+  password: "password"
   database: "honda"
-  # uri: "bolt://localhost:7687"
+  enhanced_schema: true  # Enable enhanced schema features for Langchain schema retrieval
 
 debug: # Optional: enable debug logging for components
   validation: false

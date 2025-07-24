@@ -9,7 +9,9 @@ from langchain_core.runnables.base import Runnable
 from langchain_neo4j import Neo4jGraph
 
 from neo4j_text2cypher.components.guardrails.models import GuardrailsOutput
-from neo4j_text2cypher.components.guardrails.prompts import create_guardrails_prompt_template
+from neo4j_text2cypher.components.guardrails.prompts import (
+    create_guardrails_prompt_template,
+)
 from neo4j_text2cypher.components.state import InputState
 
 
@@ -41,7 +43,8 @@ def create_guardrails_node(
     )
 
     guardrails_chain: Runnable[Dict[str, Any], Any] = (
-        guardrails_prompt | llm.with_structured_output(GuardrailsOutput, method="function_calling")
+        guardrails_prompt
+        | llm.with_structured_output(GuardrailsOutput, method="function_calling")
     )
 
     async def guardrails(state: InputState) -> Dict[str, Any]:

@@ -7,7 +7,9 @@ from typing import Optional
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_neo4j import Neo4jGraph
 
-from neo4j_text2cypher.components.utils.utils import retrieve_and_parse_schema_from_graph_for_prompts
+from neo4j_text2cypher.utils.schema_utils import (
+    retrieve_and_parse_schema_from_graph_for_prompts,
+)
 
 guardrails_system = """
 You must decide whether the provided question is in scope.

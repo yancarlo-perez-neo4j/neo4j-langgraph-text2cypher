@@ -1,3 +1,1 @@
-from .node import create_gather_cypher_node
-
-__all__ = ["create_gather_cypher_node"]
+# Components package - exports removed as gather_cypher was unused

@@ -1,7 +1,11 @@
 import re
+
 from langchain_neo4j import Neo4jGraph
 
-from .regex_patterns import get_cypher_query_node_graph_schema
+
+def get_cypher_query_node_graph_schema() -> str:
+    # dont precompile the string. this would break re.sub in utils.py
+    return r"^(- \*\*CypherQuery\*\*[\s\S]+?)(^Relationship properties|- \*)"
 
 
 def retrieve_and_parse_schema_from_graph_for_prompts(graph: Neo4jGraph) -> str:

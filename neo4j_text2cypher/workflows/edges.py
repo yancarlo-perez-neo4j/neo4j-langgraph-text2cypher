@@ -5,7 +5,6 @@ from typing import List, Literal
 from langgraph.types import Send
 
 from neo4j_text2cypher.components.state import OverallState
-from neo4j_text2cypher.components.text2cypher.state import CypherOutputState
 from neo4j_text2cypher.utils.debug import get_routing_logger
 
 
@@ -35,20 +34,6 @@ def tool_select_conditional_edge(
             return "final_answer"
 
 
-def validate_final_answer_router(
-    state: OverallState,
-) -> Send:
-    match state.get("next_action"):
-        case "final_answer":
-            return Send("final_answer", state)
-        case "text2cypher":
-            # currently only allow for a single follow up question at a time
-            tasks = state.get("tasks", list())
-            new_task = tasks[-1]
-            return Send("text2cypher", {"task": new_task.question})
-        case _:
-            return Send("final_answer", state)
-
 
 def query_mapper_edge(state: OverallState) -> List[Send]:
     """Map each task question to a Text2Cypher subgraph."""
@@ -61,18 +46,13 @@ def query_mapper_edge(state: OverallState) -> List[Send]:
     logger.debug(f"🔍 ROUTING DEBUG - Tasks: {len(tasks)}")
     for i, task in enumerate(tasks):
         logger.debug(f"🔍 ROUTING DEBUG - Task {i+1}: {task.question}")
-    
-    sends = [
-        Send("text2cypher", {"task": task.question})
-        for task in tasks
-    ]
-    
+
+    sends = [Send("text2cypher", {"task": task.question}) for task in tasks]
+
     logger.debug(f"🔍 ROUTING DEBUG - Sending {len(sends)} messages to text2cypher")
     for i, send in enumerate(sends):
-        logger.debug(f"🔍 ROUTING DEBUG - Send {i+1}: {send.node} with task: {send.arg.get('task', 'unknown')}")
-    
+        logger.debug(
+            f"🔍 ROUTING DEBUG - Send {i+1}: {send.node} with task: {send.arg.get('task', 'unknown')}"
+        )
+
     return sends
-
-
-
-

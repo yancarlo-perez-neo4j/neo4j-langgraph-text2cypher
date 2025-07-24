@@ -6,8 +6,11 @@ from typing import Any, Callable, Coroutine, Dict, List
 
 from langchain_neo4j import Neo4jGraph
 
+from neo4j_text2cypher.components.text2cypher.state import (
+    CypherOutputState,
+    CypherState,
+)
 from neo4j_text2cypher.constants import NO_CYPHER_RESULTS
-from neo4j_text2cypher.components.text2cypher.state import CypherOutputState, CypherState
 
 
 def create_text2cypher_execution_node(

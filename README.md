@@ -17,25 +17,97 @@ This repository contains
 
 ## Architecture
 
-The system follows a modular LangGraph workflow with comprehensive error handling:
+The Neo4j Text2Cypher system is built on **LangGraph** and follows a modular workflow design with comprehensive error handling. The system converts natural language questions into Cypher queries through a multi-stage pipeline:
+
+```
+Question → 🛡️ Guardrails → 🧠 Planner → 🔄 Text2Cypher → 📝 Summarize → Answer
+```
 
 ### Core Components
 
-- **Guardrails**: Ensures questions are within scope using graph schema validation
-- **Planner**: Breaks down complex questions into sub-questions
-- **Text2Cypher Pipeline**: 
+- **🛡️ Guardrails**: Ensures questions are within scope using graph schema validation
+- **🧠 Planner**: Breaks down complex questions into sub-questions for parallel processing
+- **🔄 Text2Cypher Pipeline**: Multi-stage query processing
   - **Generation**: Creates Cypher using retrieval-augmented few-shot examples
   - **Validation**: Multi-layer validation (syntax, security, semantic correctness)
   - **Correction**: Iterative error fixing with max attempt limits
   - **Execution**: Safe query execution with result gathering
-- **Summarization**: Formats raw results into natural language responses
-- **Final Answer Validation**: Quality assurance with conditional retry loops
+- **📝 Summarization**: Formats raw results into natural language responses
+- **Final Answer Validation**: Optional quality assurance with conditional retry loops
 
-### Workflow Diagram
+### Detailed System Flow
 
-![Detailed Workflow Diagram](docs/images/workflow_diagram_detailed.png)
+The system processes natural language questions through this workflow:
 
-*The diagram above shows the complete LangGraph workflow with all components and decision points, including the detailed Text2Cypher pipeline with generation, validation, correction, and execution steps.*
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        MAIN WORKFLOW                            │
+└─────────────────────────────────────────────────────────────────┘
+
+Input {question, data, history}
+    ↓
+┌─────────────┐    Reject (out of scope)    ┌─────────────┐
+│ Guardrails  │─────────────────────────────→│Final Answer │
+└─────────────┘                             └─────────────┘
+    ↓ Accept                                        ↑
+┌─────────────┐                                    │
+│   Planner   │                                    │
+└─────────────┘                                    │
+    ↓ tasks=[Task1, Task2, ...]                    │
+┌─────────────────────────────────────────────┐    │
+│         Text2Cypher (Parallel)              │    │
+│  ┌─────────────┐  ┌─────────────┐          │    │
+│  │Task1 Pipeline│  │Task2 Pipeline│   ...   │    │
+│  └─────────────┘  └─────────────┘          │    │
+└─────────────────────────────────────────────┘    │
+    ↓ cyphers=[Results...]                         │
+┌─────────────┐                                    │
+│ Summarize   │────────────────────────────────────┘
+└─────────────┘
+    ↓
+Output {answer, question, steps, cyphers, history}
+```
+
+### Text2Cypher Pipeline Detail
+
+Each task follows this internal pipeline:
+
+```
+Generate ────→ Validate ────→ Execute
+   ↓              ↓              ↓
+statement     errors[]      records[]
+steps[]    next_action   CypherOutput
+               ↓
+            Correct ←──────────┘
+               ↓              ↑
+          statement          │
+          steps[]            │
+               └─────────────┘
+                 (retry loop)
+```
+
+#### Key Data Flow Details:
+
+**🛡️ Guardrails**: Validates question scope using graph schema
+- **Reject Path**: Routes directly to Final Answer with "out of scope" message  
+- **Accept Path**: Passes to Planner with `next_action="planner"`
+
+**🧠 Planner**: Decomposes complex questions into executable tasks
+- **Output**: Array of Task objects with `question`, `parent_task`, and `data` fields
+- **Routing**: Uses `query_mapper_edge` to distribute tasks in parallel
+
+**🔄 Text2Cypher Pipeline**: Multi-stage processing for each task
+- **Generate**: Creates Cypher using few-shot examples + schema → `statement`, `steps[]`
+- **Validate**: Multi-layer validation → `errors[]`, `next_action`, `attempts++`
+- **Correct**: LLM-based error fixing → corrected `statement`, loops back to Validate
+- **Execute**: Safe database execution → `records[]`, `CypherOutputState`
+
+**📝 Summarize**: Aggregates all query results into natural language
+- **Input**: Array of `CypherOutputState` objects with database results
+- **Output**: Human-readable `summary` string for final response
+
+**📋 Final Answer**: Formats output and updates conversation history
+- **Output**: Complete `OutputState` with answer, metadata, and updated history
 
 ## Quick Start
 

@@ -1,5 +1,5 @@
 from operator import add
-from typing import Annotated, Any, Dict, List, Optional
+from typing import Annotated, Any, Dict, List
 
 from typing_extensions import TypedDict
 
@@ -84,5 +84,3 @@ class TaskState(TypedDict):
     question: str
     parent_task: str
     data: CypherOutputState
-
-

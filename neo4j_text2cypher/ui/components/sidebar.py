@@ -12,9 +12,11 @@ def sidebar() -> None:
         for i, question in enumerate(st.session_state.example_questions):
             # Truncate long questions for better display
             display_text = question[:60] + "..." if len(question) > 60 else question
-            if st.sidebar.button(display_text, key=f"sidebar_example_{i}", help=question):
+            if st.sidebar.button(
+                display_text, key=f"sidebar_example_{i}", help=question
+            ):
                 st.session_state["current_question"] = question
-        
+
         st.sidebar.divider()
 
     # Reset chat button

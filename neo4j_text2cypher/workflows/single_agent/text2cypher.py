@@ -1,4 +1,4 @@
-from typing import Literal, List, Dict, Any
+from typing import Literal
 
 from langchain_core.language_models import BaseChatModel
 from langchain_neo4j import Neo4jGraph
@@ -15,14 +15,13 @@ from neo4j_text2cypher.components.text2cypher import (
     create_text2cypher_validation_node,
 )
 from neo4j_text2cypher.components.text2cypher.state import CypherInputState, CypherState
-from neo4j_text2cypher.retrievers.cypher_examples.base import BaseCypherExampleRetriever
+from neo4j_text2cypher.retrievers import ConfigCypherExampleRetriever
 
 
 def create_text2cypher_agent(
     llm: BaseChatModel,
     graph: Neo4jGraph,
-    cypher_example_retriever: BaseCypherExampleRetriever,
-    llm_cypher_validation: bool = True,
+    cypher_example_retriever: ConfigCypherExampleRetriever,
     max_attempts: int = 3,
     attempt_cypher_execution_on_final_attempt: bool = False,
 ) -> CompiledStateGraph:
@@ -37,10 +36,8 @@ def create_text2cypher_agent(
         The Neo4j graph wrapper.
     llm : BaseChatModel
         The LLM to use for processing.
-    cypher_example_retriever: BaseCypherExampleRetriever
+    cypher_example_retriever: ConfigCypherExampleRetriever
         The retriever used to collect Cypher examples for few shot prompting.
-    llm_cypher_validation : bool, optional
-        Whether to perform LLM validation with the provided LLM, by default True
     max_attempts: int, optional
         The max number of allowed attempts to generate valid Cypher, by default 3
     attempt_cypher_execution_on_final_attempt, bool, optional
@@ -59,7 +56,6 @@ def create_text2cypher_agent(
     validate_cypher = create_text2cypher_validation_node(
         llm=llm,
         graph=graph,
-        llm_validation=llm_cypher_validation,
         max_attempts=max_attempts,
         attempt_cypher_execution_on_final_attempt=attempt_cypher_execution_on_final_attempt,
     )

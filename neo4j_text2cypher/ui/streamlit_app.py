@@ -1,7 +1,6 @@
 import asyncio
 import sys
 from pathlib import Path
-from typing import List
 
 # Add the project root to Python path
 project_root = Path(__file__).parent.parent.parent
@@ -12,11 +11,13 @@ from dotenv import load_dotenv
 from langchain_neo4j import Neo4jGraph
 from langchain_openai import ChatOpenAI
 
-from neo4j_text2cypher.retrievers.cypher_examples import ConfigCypherExampleRetriever
+from neo4j_text2cypher.retrievers import ConfigCypherExampleRetriever
 from neo4j_text2cypher.ui.components import chat, display_chat_history, sidebar
 from neo4j_text2cypher.utils.config import ConfigLoader
 from neo4j_text2cypher.utils.debug import setup_debug_logging
-from neo4j_text2cypher.workflows.neo4j_text2cypher_workflow import create_neo4j_text2cypher_workflow
+from neo4j_text2cypher.workflows.neo4j_text2cypher_workflow import (
+    create_neo4j_text2cypher_workflow,
+)
 
 if load_dotenv():
     print("Env Loaded Successfully!")
@@ -30,14 +31,18 @@ def get_config_loader() -> ConfigLoader:
     args = sys.argv
     if len(args) > 1:
         config_path: str = args[1]
-        
+
         # Only support YAML configs
         if config_path.lower().endswith((".yml", ".yaml")):
             return ConfigLoader(config_path)
         else:
-            raise ValueError(f"Only YAML config files (.yml/.yaml) are supported: {config_path}")
+            raise ValueError(
+                f"Only YAML config files (.yml/.yaml) are supported: {config_path}"
+            )
     else:
-        raise ValueError("Config file path is required. Usage: streamlit run app.py <config.yml>")
+        raise ValueError(
+            "Config file path is required. Usage: streamlit run app.py <config.yml>"
+        )
 
 
 def initialize_state(config_loader: ConfigLoader) -> None:
@@ -47,19 +52,19 @@ def initialize_state(config_loader: ConfigLoader) -> None:
         # Setup debug logging from config
         debug_config = config_loader.get_debug_config()
         setup_debug_logging(debug_config)
-        
+
         # Initialize Neo4j connection with app-specific settings
         neo4j_params = config_loader.get_neo4j_connection_params()
         graph = Neo4jGraph(**neo4j_params)
-        
+
         # Initialize LLM
         llm = ChatOpenAI(model="gpt-4o", temperature=0)
-        
+
         # Use unified config retriever
         cypher_example_retriever = ConfigCypherExampleRetriever(
             config_path=str(config_loader.config_path)
         )
-        
+
         # Get config for UI
         streamlit_config = config_loader.get_streamlit_config()
 
@@ -69,7 +74,6 @@ def initialize_state(config_loader: ConfigLoader) -> None:
             graph=graph,
             scope_description=streamlit_config.scope_description,
             cypher_example_retriever=cypher_example_retriever,
-            llm_cypher_validation=True,
             attempt_cypher_execution_on_final_attempt=False,
         )
 
@@ -78,7 +82,9 @@ def initialize_state(config_loader: ConfigLoader) -> None:
         st.session_state.example_questions = streamlit_config.example_questions
 
 
-async def run_app(title: str = "Simple Text2Cypher Assistant", scope_description: str = "") -> None:
+async def run_app(
+    title: str = "Simple Text2Cypher Assistant", scope_description: str = ""
+) -> None:
     """
     Run the Streamlit application.
     """
@@ -88,7 +94,7 @@ async def run_app(title: str = "Simple Text2Cypher Assistant", scope_description
         st.write(scope_description)
     sidebar()
     display_chat_history()
-    
+
     # Prompt for user input and save and display
     if question := st.chat_input("Ask a question about your graph data..."):
         st.session_state["current_question"] = question
@@ -109,7 +115,12 @@ def main() -> None:
 
     initialize_state(config_loader)
 
-    asyncio.run(run_app(title=streamlit_config.title, scope_description=streamlit_config.scope_description))
+    asyncio.run(
+        run_app(
+            title=streamlit_config.title,
+            scope_description=streamlit_config.scope_description,
+        )
+    )
 
 
 if __name__ == "__main__":
