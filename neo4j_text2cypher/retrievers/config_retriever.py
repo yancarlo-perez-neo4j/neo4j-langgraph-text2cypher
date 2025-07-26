@@ -16,6 +16,11 @@ class ConfigCypherExampleRetriever:
         """Get formatted example queries from the configuration."""
         example_queries = self.config_loader.get_example_queries()
         return self._format_examples_list(example_queries)
+    
+    def get_visualization_examples(self) -> str:
+        """Get formatted visualization example queries from the configuration."""
+        viz_examples = self.config_loader.get_visualization_examples()
+        return self._format_examples_list(viz_examples) if viz_examples else self.get_examples()
 
     def _format_examples_list(self, examples: List[ExampleQuery]) -> str:
         """Format example queries for use in prompts."""

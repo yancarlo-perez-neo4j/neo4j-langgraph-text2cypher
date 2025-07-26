@@ -55,6 +55,7 @@ def create_text2cypher_correction_node(
             "next_action_cypher": "validate_cypher",
             "statement": corrected_cypher,
             "cypher_steps": ["correct_cypher"],
+            "visualization_requested": state.get("visualization_requested", False),
         }
 
     return correct_cypher

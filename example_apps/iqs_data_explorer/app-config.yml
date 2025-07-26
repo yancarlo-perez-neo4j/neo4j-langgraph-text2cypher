@@ -25,6 +25,34 @@ streamlit_ui:
     - "Summarize and compare the sentiment for responses related to noise and sound in Honda Accord and Honda Pilot for women and return the number of responses considered."
     - "What color is the sky?"
 
+# Visualization-specific examples for graph display
+visualization_examples:
+  - question: Visualize the connections between Honda Pilot complaints and their categories
+    cql: |-
+      MATCH path=(v:Verbatim {make: "Honda", model: "Pilot"})-[r:HAS_CATEGORY]->(c:Category)
+      RETURN path
+      LIMIT 10
+  - question: Show me how problems connect to verbatims for Acura models
+    cql: |-
+      MATCH path=(v:Verbatim {make: "Acura"})-[r:HAS_PROBLEM]->(p:Problem)
+      RETURN path
+      LIMIT 10
+  - question: Display the relationship network between categories and problems
+    cql: |-
+      MATCH path=(c:Category)<-[:HAS_CATEGORY]-(v:Verbatim)-[:HAS_PROBLEM]->(p:Problem)
+      RETURN path
+      LIMIT 10
+  - question: Visualize feedback paths from customers for acura make
+    cql: |-
+      MATCH path=(v:Verbatim)-[:HAS_CATEGORY]->(c:Category)
+        WHERE v.make = 'Acura'
+      RETURN path LIMIT 10
+  - question: Visualize feedback from customers for acura make, list their categories and summarize the feedback about doors
+    cql: |-
+      MATCH path=(v:Verbatim)-[:HAS_CATEGORY]->(c:Category)
+        WHERE v.make = 'Acura'
+      RETURN path LIMIT 10
+
 example_queries:
   - question: What is the proportion of male to female complainants about cup holders in the Honda Odyssey?
     cql: |-

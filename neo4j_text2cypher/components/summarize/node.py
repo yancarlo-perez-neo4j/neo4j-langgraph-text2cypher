@@ -64,25 +64,40 @@ def create_summarization_node(
         Summarize results of the performed Cypher queries.
         """
 
-        results = [
+        # Separate visualization and non-visualization queries
+        all_cyphers = state.get("cyphers", list())
+        viz_cyphers = [c for c in all_cyphers if c.get("visualization_requested", False)]
+        regular_cyphers = [c for c in all_cyphers if not c.get("visualization_requested", False)]
+        
+        # Get results only from non-visualization queries for summarization
+        results_to_summarize = [
             cypher.get("records")
-            for cypher in state.get("cyphers", list())
+            for cypher in regular_cyphers
             if cypher.get("records") is not None
         ]
 
-        if results:
-            # Format conversation history for context
+        if results_to_summarize:
+            # Summarize non-visualization results
             history = state.get("history", [])
             conversation_history = format_conversation_history_for_summary(history)
 
             summary = await generate_summary.ainvoke(
                 {
                     "question": state.get("question"),
-                    "results": results,
+                    "results": results_to_summarize,
                     "conversation_history": conversation_history,
                 }
             )
+            
+            # Add note about visualizations if present
+            if viz_cyphers:
+                viz_count = len(viz_cyphers)
+                viz_note = f"\n\n{viz_count} graph visualization{'s' if viz_count > 1 else ''} available in below details."
+                summary += viz_note
 
+        elif viz_cyphers:
+            # Only visualization queries - use generic message
+            summary = "Graph visualization is available below showing the requested data relationships."
         else:
             summary = "No data to summarize."
 

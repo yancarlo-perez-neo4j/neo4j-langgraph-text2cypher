@@ -123,6 +123,7 @@ def create_text2cypher_validation_node(
             "errors": errors,
             "attempts": GENERATION_ATTEMPT,
             "cypher_steps": ["validate_cypher"],
+            "visualization_requested": state.get("visualization_requested", False),
         }
 
     return validate_cypher

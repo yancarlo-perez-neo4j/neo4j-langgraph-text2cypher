@@ -53,6 +53,9 @@ class UnifiedAppConfig(BaseModel):
     example_queries: List[ExampleQuery] = Field(
         default=[], description="Example question-cypher pairs"
     )
+    visualization_examples: Optional[List[ExampleQuery]] = Field(
+        default=[], description="Visualization-specific example question-cypher pairs"
+    )
     debug: DebugConfig = Field(
         default_factory=DebugConfig, description="Debug logging settings"
     )
@@ -80,6 +83,7 @@ class ConfigLoader:
         streamlit_config = self._raw_config.get("streamlit_ui", {})
         neo4j_config = self._raw_config.get("neo4j", {})
         example_queries = self._raw_config.get("example_queries", [])
+        visualization_examples = self._raw_config.get("visualization_examples", [])
         debug_config = self._raw_config.get("debug", {})
 
         # Merge Neo4j config with environment variables
@@ -90,12 +94,14 @@ class ConfigLoader:
 
         # Parse example queries (handle both new and legacy formats)
         parsed_queries = self._parse_example_queries(example_queries)
+        parsed_viz_examples = self._parse_example_queries(visualization_examples)
 
         # Create unified config
         self._unified_config = UnifiedAppConfig(
             streamlit_ui=StreamlitUIConfig(**streamlit_config),
             neo4j=Neo4jConfig(**merged_neo4j_config),
             example_queries=parsed_queries,
+            visualization_examples=parsed_viz_examples,
             debug=DebugConfig(**merged_debug_config),
         )
 
@@ -171,6 +177,11 @@ class ConfigLoader:
     def get_example_queries(self) -> List[ExampleQuery]:
         """Get parsed example queries."""
         return self.load_config().example_queries
+    
+    def get_visualization_examples(self) -> List[ExampleQuery]:
+        """Get parsed visualization example queries."""
+        examples = self.load_config().visualization_examples
+        return examples if examples is not None else []
 
     def get_debug_config(self) -> DebugConfig:
         """Get debug configuration."""

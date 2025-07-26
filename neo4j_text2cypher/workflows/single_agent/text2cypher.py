@@ -10,9 +10,13 @@ from neo4j_text2cypher.components.state import (
 )
 from neo4j_text2cypher.components.text2cypher import (
     create_text2cypher_correction_node,
-    create_text2cypher_execution_node,
-    create_text2cypher_generation_node,
     create_text2cypher_validation_node,
+)
+from neo4j_text2cypher.components.text2cypher.execution.node_with_graph import (
+    create_text2cypher_execution_with_graph_node,
+)
+from neo4j_text2cypher.components.text2cypher.generation.node_with_viz import (
+    create_text2cypher_generation_node_with_viz,
 )
 from neo4j_text2cypher.components.text2cypher.state import CypherInputState, CypherState
 from neo4j_text2cypher.retrievers import ConfigCypherExampleRetriever
@@ -50,7 +54,7 @@ def create_text2cypher_agent(
         The workflow.
     """
 
-    generate_cypher = create_text2cypher_generation_node(
+    generate_cypher = create_text2cypher_generation_node_with_viz(
         llm=llm, graph=graph, cypher_example_retriever=cypher_example_retriever
     )
     validate_cypher = create_text2cypher_validation_node(
@@ -60,7 +64,7 @@ def create_text2cypher_agent(
         attempt_cypher_execution_on_final_attempt=attempt_cypher_execution_on_final_attempt,
     )
     correct_cypher = create_text2cypher_correction_node(llm=llm, graph=graph)
-    execute_cypher = create_text2cypher_execution_node(graph=graph)
+    execute_cypher = create_text2cypher_execution_with_graph_node(graph=graph)
 
     text2cypher_graph_builder = StateGraph(
         CypherState, input=CypherInputState, output=OverallState

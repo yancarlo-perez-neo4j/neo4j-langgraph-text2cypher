@@ -22,6 +22,7 @@ class CypherState(TypedDict):
     next_action_cypher: str
     attempts: int
     cypher_steps: Annotated[List[str], add]
+    visualization_requested: bool
 
 
 class CypherOutputState(TypedDict):
@@ -31,3 +32,4 @@ class CypherOutputState(TypedDict):
     errors: List[str]
     records: List[Dict[str, Any]]
     cypher_steps: List[str]
+    visualization_requested: bool

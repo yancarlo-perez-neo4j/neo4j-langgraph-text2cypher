@@ -15,6 +15,40 @@ from neo4j_text2cypher.components.state import (
 )
 
 
+def convert_records_to_dataframe(records: List[Dict[str, Any]]) -> pd.DataFrame:
+    """
+    Convert list of records to a pandas DataFrame for better display.
+    
+    Parameters
+    ----------
+    records : List[Dict[str, Any]]
+        The records from Cypher query results
+        
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame for interactive display
+    """
+    if not records:
+        return pd.DataFrame()
+    
+    try:
+        # Convert to DataFrame
+        df = pd.DataFrame(records)
+        
+        # Handle any nested objects by converting to string
+        for col in df.columns:
+            if df[col].dtype == 'object':
+                # Check if any values are complex objects (not simple strings/numbers)
+                if any(isinstance(val, (dict, list)) for val in df[col] if pd.notna(val)):
+                    df[col] = df[col].astype(str)
+        
+        return df
+    except Exception as e:
+        st.error(f"Error converting records to DataFrame: {e}")
+        return pd.DataFrame()
+
+
 def convert_streamlit_messages_to_history() -> List[HistoryRecord]:
     """
     Convert Streamlit session messages to HistoryRecord format.
@@ -119,28 +153,90 @@ async def append_llm_response(question: str) -> None:
 
 def show_cypher_response_information(response: OutputState) -> None:
     if response.get("cyphers") and len(response.get("cyphers", list())) > 0:
-        # a list of record lists
-        records_lists: List[List[Dict[str, Any]]] = [
-            c.get("records", list())
-            for c in response.get("cyphers", list())
-            if c.get("records") is not None
-        ]
-
-        download_csv_button(cypher_results=records_lists)
-
-        with st.expander("Cypher"):
-            [
-                (
-                    st.write(c.get("task", "")),
-                    st.code(c.get("statement"), language="cypher"),
-                    st.write(c.get("parameters", "No parameters")),
-                    st.json(
-                        c.get("records") if c.get("records") is not None else "",
-                        expanded=False,
-                    ),
-                )
+        # Create a collapsible expander for the entire response
+        with st.expander("📊 Response Details", expanded=True):
+            # a list of record lists
+            records_lists: List[List[Dict[str, Any]]] = [
+                c.get("records", list())
                 for c in response.get("cyphers", list())
+                if c.get("records") is not None
             ]
+
+            download_csv_button(cypher_results=records_lists)
+
+            # Display each cypher query result with its visualization inline
+            cyphers = response.get("cyphers", list())
+            
+            if len(cyphers) > 1:
+                # Show query headers only for multiple queries
+                for i, cypher in enumerate(cyphers):
+                    st.markdown(f"### {i+1}. {cypher.get('task', '')}")
+                    
+                    # Show Cypher details in expandable section with dynamic label
+                    is_visualization = cypher.get("visualization_requested", False)
+                    expander_label = "Generated Cypher / Visualization" if is_visualization else "Generated Cypher / Results"
+                    with st.expander(expander_label):
+                        st.code(cypher.get("statement"), language="cypher")
+                        if cypher.get("parameters"):
+                            st.write("Parameters:", cypher.get("parameters"))
+                        
+                        # Display results as interactive DataFrame (only if successful)
+                        if not cypher.get("visualization_requested", False):
+                            records = cypher.get("records")
+                            if records:  # Non-empty results
+                                df = convert_records_to_dataframe(records)
+                                if not df.empty:
+                                    st.subheader("Results")
+                                    st.dataframe(df, use_container_width=True)
+                        
+                        # Show visualization inside the same expander if available
+                        if cypher.get("graph_result") is not None:
+                            st.divider()
+                            st.subheader("🔍 Graph Visualization")
+                            try:
+                                from neo4j_text2cypher.ui.components.visualization import (
+                                    render_neo4j_graph_from_result
+                                )
+                                render_neo4j_graph_from_result(
+                                    cypher.get("graph_result"),
+                                    height=600
+                                )
+                            except Exception as e:
+                                st.error(f"Error displaying graph visualization: {str(e)}")
+            else:
+                # Single query - simpler display
+                cypher = cyphers[0]
+                is_visualization = cypher.get("visualization_requested", False)
+                expander_label = "Generated Cypher / Visualization" if is_visualization else "Generated Cypher / Results"
+                with st.expander(expander_label):
+                    st.write(cypher.get("task", ""))
+                    st.code(cypher.get("statement"), language="cypher")
+                    if cypher.get("parameters"):
+                        st.write("Parameters:", cypher.get("parameters"))
+                    
+                    # Display results as interactive DataFrame (only if successful)
+                    if not cypher.get("visualization_requested", False):
+                        records = cypher.get("records")
+                        if records:  # Non-empty results
+                            df = convert_records_to_dataframe(records)
+                            if not df.empty:
+                                st.subheader("Results")
+                                st.dataframe(df, use_container_width=True)
+                    
+                    # Show visualization inside the same expander if available
+                    if cypher.get("graph_result") is not None:
+                        st.divider()
+                        st.subheader("🔍 Graph Visualization")
+                        try:
+                            from neo4j_text2cypher.ui.components.visualization import (
+                                render_neo4j_graph_from_result
+                            )
+                            render_neo4j_graph_from_result(
+                                cypher.get("graph_result"),
+                                height=600
+                            )
+                        except Exception as e:
+                            st.error(f"Error displaying graph visualization: {str(e)}")
 
 
 async def chat(question: str) -> None:
